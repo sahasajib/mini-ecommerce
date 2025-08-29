@@ -39,6 +39,6 @@ func (mngr *Manager) WrapMux( handler http.Handler) http.Handler{
 		for _, middleware := range mngr.globalMiddlewares{
 			h = middleware(h)
 		}
-
+		
 		return h
 }

@@ -19,9 +19,8 @@ func CreteProducts (w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Plz give me valid json", 400)
 		return
 	}
-	newProduct.ID = len(database.ProductList) + 1
+	
+	createdProduct := database.Store(newProduct)
 
-	database.ProductList = append(database.ProductList, newProduct)
-
-	util.SendData(w, newProduct, 201)
+	util.SendData(w, createdProduct, 201)
 }
