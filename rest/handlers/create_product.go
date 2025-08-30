@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func CreteProducts (w http.ResponseWriter, r *http.Request){
+func CreteProduct(w http.ResponseWriter, r *http.Request){
 	
 	var newProduct database.Product
 	decoder := json.NewDecoder(r.Body)

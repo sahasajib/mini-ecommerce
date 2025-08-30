@@ -7,8 +7,7 @@ import (
 	"strconv"
 )
 
-
-func GetProductByID(w http.ResponseWriter, r *http.Request) {
+func DeleteProduct(w http.ResponseWriter, r *http.Request){
 	ID := r.PathValue("id")
 
 	id, err := strconv.Atoi(ID)
@@ -17,9 +16,11 @@ func GetProductByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Please provide a valid ID", http.StatusBadRequest)
 		return
 	}
-	product := database.Get(id)
-	if product == nil{
-		util.SendError(w, http.StatusNotFound, "Product not found")
-	}
-	util.SendData(w, product, http.StatusNotFound)
+
+	
+	
+
+	database.Delete(id)
+
+	util.SendData(w, "Successfully product deleted", 201)
 }
