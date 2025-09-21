@@ -18,7 +18,7 @@ type Config struct{
 var configuration *Config
 
 
-func loadCOnfig(){
+func loadConfig(){
 	err := godotenv.Load()
 	if err != nil{
 		fmt.Printf("Failed to load the env variables: %v", err)
@@ -61,7 +61,7 @@ func loadCOnfig(){
 
 func GetConfig() *Config{
 	if configuration == nil{
-		loadCOnfig()
+		loadConfig()
 	}
 	return configuration
 }
