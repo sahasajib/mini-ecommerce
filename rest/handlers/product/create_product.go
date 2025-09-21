@@ -1,4 +1,4 @@
-package handlers
+package product
 
 import (
 	"ecommerce/database"
@@ -8,8 +8,9 @@ import (
 	"net/http"
 )
 
-func CreteProduct(w http.ResponseWriter, r *http.Request){
+func (h *Handler) CreteProduct(w http.ResponseWriter, r *http.Request){
 	
+
 	var newProduct database.Product
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newProduct)
@@ -24,3 +25,4 @@ func CreteProduct(w http.ResponseWriter, r *http.Request){
 
 	util.SendData(w, createdProduct, 201)
 }
+

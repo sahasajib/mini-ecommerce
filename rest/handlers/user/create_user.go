@@ -1,4 +1,4 @@
-package handlers
+package user
 
 import (
 	"ecommerce/database"
@@ -8,7 +8,7 @@ import (
 )
 
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser database.User
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
 		http.Error(w, "Please provide valid json", http.StatusBadRequest)

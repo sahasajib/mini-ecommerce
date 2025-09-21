@@ -1,6 +1,7 @@
-package handlers
+package user
 
 import (
+	"ecommerce/config"
 	"ecommerce/database"
 	"ecommerce/util"
 	"encoding/json"
@@ -11,7 +12,7 @@ type ReqLogin struct {
 	Password string `json:"password"`
 }
 
-func Login(w http.ResponseWriter, r *http.Request){
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request){
 	var reqLogin ReqLogin
 	if err := json.NewDecoder(r.Body).Decode(&reqLogin); err != nil {
 		http.Error(w, "Please provide valid json", http.StatusBadRequest)
@@ -22,5 +23,18 @@ func Login(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
-	util.SendData(w, usr, http.StatusOK)
+
+	cnf := config.GetConfig()
+
+	accessToken, err:= util.CreateJwt(cnf.JwtSecretKey, util.Payload{
+		Sub: usr.ID,
+		FirstName: usr.FirstName,
+		LastName: usr.LastName,
+		Email: usr.Email,
+	})
+	if err != nil{
+		http.Error(w, "Could not create access token", http.StatusInternalServerError)
+		return
+	}
+	util.SendData(w, accessToken, http.StatusOK)
 }
