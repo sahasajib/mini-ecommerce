@@ -6,7 +6,7 @@ import (
 )
 
 
-func SendData(w http.ResponseWriter,  data interface{}, statusCode int){
+func SendData(w http.ResponseWriter, statusCode int,  data interface{}){
 	
 	w.WriteHeader(statusCode)
 
