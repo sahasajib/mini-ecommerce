@@ -1,12 +1,21 @@
 package repo
 
+import (
+	// "ecommerce/infra/db"
+	// "fmt"
+
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
+)
+
 type User struct {
-	ID int `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	IsShopOwner bool   `json:"is_shop_owner"`
+	ID int `json:"id" db:"id"`
+	FirstName string `json:"first_name" db:"first_name"`
+	LastName  string `json:"last_name" db:"last_name"`
+	Email     string `json:"email" db:"email"`
+	Password  string `json:"password" db:"password"`
+	IsShopOwner bool   `json:"is_shop_owner" db:"is_shop_owner"`
 }
 
 type UserRepo interface{
@@ -19,27 +28,56 @@ type UserRepo interface{
 }
 
 type userRepo struct{
-	users []User
+	db *sqlx.DB
 }
 
-func NewUserRepo() UserRepo{
-	return &userRepo{}
-}
-func (u userRepo) Create(user User) (*User, error) {
-	if user.ID != 0 {
-		return  &user, nil
+func NewUserRepo(db *sqlx.DB) UserRepo{
+	return &userRepo{
+		db: db,
 	}
-	user.ID = len(u.users) + 1
-	u.users = append(u.users, user)
+}
+func (u *userRepo) Create(user User) (*User, error) {
+	query := `INSERT INTO users (
+	first_name, 
+	last_name, 
+	email, 
+	password, 
+	is_shop_owner
+	) VALUES (
+	 :first_name, 
+	 :last_name, 
+	 :email, 
+	 :password, 
+	 :is_shop_owner
+	 )
+	RETURNING id`
+	var userID int
+	rows, err := u.db.NamedQuery(query, user)
+	if err != nil{
+		fmt.Println(err)
+		return nil, err
+	}
+	if rows.Next(){
+		rows.Scan(&userID)
+	}
+	user.ID = userID
+
 	return &user, nil
 }
 
 
 func (u *userRepo) Find(email, pass string)  (*User, error){
- for _, user := range u.users{
-	 if user.Email == email && user.Password == pass{
-		 return &user, nil
-	 }
- }
- return nil, nil
+	var user User
+	query := `
+	SELECT id, first_name, last_name, email, password, is_shop_owner
+	FROM users 
+	WHERE email=$1 AND password=$2
+	LIMIT 1
+	`
+	err := u.db.Get(&user, query, email, pass)
+	if err != nil{
+		fmt.Println("Failed to find user: ", err)
+		return nil, err
+	}
+	return &user, nil
 }

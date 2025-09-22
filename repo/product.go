@@ -1,11 +1,13 @@
 package repo
 
+import "github.com/jmoiron/sqlx"
+
 type Product struct{
-	ID int             `json:"id"`
-	Title string       `json:"name"`
-	Description string `json:"description"`
-	Price float64      `json:"price"`
-	ImgUrl string      `json:"imageUrl"`
+	ID int             `json:"id" db:"id"`
+	Title string       `json:"name" db:"title"`
+	Description string `json:"description" db:"description"`
+	Price float64      `json:"price" db:"price"`
+	ImgUrl string      `json:"imageUrl" db:"img_url"`
 }
 
 type ProductRepo interface {
@@ -17,79 +19,135 @@ type ProductRepo interface {
 }
 
 type productRepo struct{
-	productList []*Product
+	db *sqlx.DB
 }
 //constructor function
-func NewProductRepo() ProductRepo{
-	repo := &productRepo{}
+func NewProductRepo(db *sqlx.DB) ProductRepo{
+	return &productRepo{
+		db: db,
+	}
 
-	generateInitialProducts(repo)
-	return repo
+
 }
 
 func (r *productRepo) Create(p Product) (*Product, error) {
-	p.ID = len(r.productList) + 1
-	r.productList = append(r.productList, &p)
+	query := `
+	INSERT INTO products (
+		title,
+		description,
+		price,
+		img_url
+	) VALUES ($1, $2, $3, $4)
+	RETURNING id
+	`
+	r.db.QueryRow(query,
+		p.Title,
+		p.Description,
+		p.Price,
+		p.ImgUrl,
+	).Scan(&p.ID)
 	return &p, nil
 }
 
 func (r *productRepo) Get(productID int) (*Product, error) {
-	for _, product := range r.productList{
-		if product.ID == productID{
-			return product, nil
-		}
+	var product Product
+	query := `
+	SELECT
+		id,
+		title,
+		description,
+		price,
+		img_url
+	FROM products
+	WHERE id = $1
+	`
+	err := r.db.Get(&product, query, productID)
+	if err != nil{
+		return nil, err
 	}
-	return nil, nil
+	return &product, nil
 }
 
 func (r *productRepo) List() ([]*Product, error){
-	return r.productList, nil
+	var productList []*Product
+	query := `
+	SELECT
+		id,
+		title,
+		description,
+		price,
+		img_url
+	FROM products
+	ORDER BY id DESC
+	`
+	err := r.db.Select(&productList, query)
+	if err != nil{
+		return nil, err
+	}
+	return productList, nil
 }
 
 func (r *productRepo) Update(product Product) (*Product, error) {
-	for i, p := range r.productList{
-		if p.ID == product.ID{
-			r.productList[i] = &product
-		}
+	query := `
+	UPDATE products SET
+		title=$1,
+		description=$2,
+		price=$3,
+		img_url=$4,
+		updated_at=NOW()
+	WHERE id=$5
+	`
+	row := r.db.QueryRow(query,
+		product.Title,
+		product.Description,
+		product.Price,
+		product.ImgUrl,
+		product.ID,
+	)
+	err := row.Err()
+	if err != nil{
+		return nil, err
 	}
 	return &product, nil
 }
 func (r *productRepo) Delete(ProductID int) error {
-	var tempList []*Product
-	for _, p := range r.productList{
-		if p.ID != ProductID{
-			tempList = append(tempList, p)
-		}
+	query := `
+	DELETE FROM products
+	WHERE id = $1
+	`
+	_, err := r.db.Exec(query, ProductID)
+	if err != nil{
+		return err
 	}
-	r.productList = tempList
 	return nil
+	
 }
 
-func generateInitialProducts(r *productRepo) {
-	prd1 := &Product{
-		ID: 1,
-		Title: "Orange",
-		Description: "testy food and healthy food",
-		Price: 100,
-		ImgUrl: "https://www.dole.com/sites/default/files/media/2025-01/oranges.png",
-	}
+// func generateInitialProducts(r *productRepo) {
+// 	prd1 := &Product{
+// 		ID: 1,
+// 		Title: "Orange",
+// 		Description: "testy food and healthy food",
+// 		Price: 100,
+// 		ImgUrl: "https://www.dole.com/sites/default/files/media/2025-01/oranges.png",
+// 	}
 
-	prd2 := &Product{
-		ID: 2,
-		Title: "Apple",
-		Description: "testy food and healthy food",
-		Price: 99,
-		ImgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYnc4owRRH-m0i5-4t-xyiRMvzvhu-QAVF_g&s",
-	}
-	prd3 := &Product{
-		ID: 3,
-		Title: "Banana",
-		Description: "testy food and healthy food",
-		Price: 15,
-		ImgUrl: "https://www.dole.com/sites/default/files/styles/1024w768h-80/public/media/2025-01/banana-cavendish_0.png?itok=xIgYOIE_-9FKLRtCr",
-	}
+// 	prd2 := &Product{
+// 		ID: 2,
+// 		Title: "Apple",
+// 		Description: "testy food and healthy food",
+// 		Price: 99,
+// 		ImgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYnc4owRRH-m0i5-4t-xyiRMvzvhu-QAVF_g&s",
+// 	}
+// 	prd3 := &Product{
+// 		ID: 3,
+// 		Title: "Banana",
+// 		Description: "testy food and healthy food",
+// 		Price: 15,
+// 		ImgUrl: "https://www.dole.com/sites/default/files/styles/1024w768h-80/public/media/2025-01/banana-cavendish_0.png?itok=xIgYOIE_-9FKLRtCr",
+// 	}
 
-	r.productList = append(r.productList, prd1)
-	r.productList = append(r.productList, prd2)
-	r.productList = append(r.productList, prd3)
-}
+// 	r.productList = append(r.productList, prd1)
+// 	r.productList = append(r.productList, prd2)
+// 	r.productList = append(r.productList, prd3)
+// }
