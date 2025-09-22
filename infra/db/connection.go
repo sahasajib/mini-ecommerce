@@ -1,6 +1,7 @@
 package db
 
 import (
+	"ecommerce/config"
 	"fmt"
 	"log"
 
@@ -8,12 +9,23 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func GetConnectionString() string {
-	return "user=sajib password=12345678 host=localhost port=5432 dbname=ecom sslmode=disable"
+func GetConnectionString(cnf *config.DBConfig) string {
+	connString := fmt.Sprintf(
+		"user=%s password=%s host=%s port=%d dbname=%s",
+	cnf.User,
+	cnf.Password,
+	cnf.Host,
+	cnf.Port,
+	cnf.Name,
+	) 
+	if !cnf.EnableSSLMode{
+		connString += " sslmode=disable"
+	}
+	return connString
 }
 
-func NewConnection() (*sqlx.DB, error){
-	dbSource := GetConnectionString()
+func NewConnection(cnf *config.DBConfig) (*sqlx.DB, error){
+	dbSource := GetConnectionString(cnf)
 	log.Println("DB Source: ", dbSource)
 	dbCon, err := sqlx.Connect("postgres", dbSource)
 	log.Println("DB Connection: ", dbCon)

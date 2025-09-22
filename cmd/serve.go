@@ -14,13 +14,18 @@ import (
 
 func Serve() {
 	cnf := config.GetConfig()
+	//fmt.Println("%+v", cnf.DB)
 
-	dbCon, err := db.NewConnection()
+	dbCon, err := db.NewConnection(cnf.DB)
 	if err != nil{
 		fmt.Println("Failed to connect to db")
 		os.Exit(1)
 	}
-
+	err = db.MigrateDB(dbCon, "./migrations")
+	if err != nil{
+		fmt.Println("DB Migration failed", err)
+		os.Exit(1)
+	}
 	middlewares := middleware.NewMiddlewares(cnf)
 
 	productRepo := repo.NewProductRepo(dbCon)

@@ -21,6 +21,10 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request){
 		util.SendError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
+	if usr == nil{
+		util.SendError(w, http.StatusUnauthorized, "Invalid credentials")
+		return
+	}
 
 	accessToken, err:= util.CreateJwt(h.cnf.JwtSecretKey, util.Payload{
 		Sub: usr.ID,
