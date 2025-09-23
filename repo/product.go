@@ -1,21 +1,16 @@
 package repo
 
-import "github.com/jmoiron/sqlx"
+import (
+	"ecommerce/domain"
+	"ecommerce/product"
 
-type Product struct{
-	ID int             `json:"id" db:"id"`
-	Title string       `json:"name" db:"title"`
-	Description string `json:"description" db:"description"`
-	Price float64      `json:"price" db:"price"`
-	ImgUrl string      `json:"imageUrl" db:"img_url"`
-}
+	"github.com/jmoiron/sqlx"
+)
+
+
 
 type ProductRepo interface {
-	Create(p Product) (*Product, error)
-	Get(productID int) (*Product, error)
-	List() ([]*Product, error)
-	Update(p Product) (*Product, error)
-	Delete(ProductID int) error
+	product.ProductRepo
 }
 
 type productRepo struct{
@@ -30,7 +25,7 @@ func NewProductRepo(db *sqlx.DB) ProductRepo{
 
 }
 
-func (r *productRepo) Create(p Product) (*Product, error) {
+func (r *productRepo) Create(p domain.Product) (*domain.Product, error) {
 	query := `
 	INSERT INTO products (
 		title,
@@ -49,8 +44,8 @@ func (r *productRepo) Create(p Product) (*Product, error) {
 	return &p, nil
 }
 
-func (r *productRepo) Get(productID int) (*Product, error) {
-	var product Product
+func (r *productRepo) Get(productID int) (*domain.Product, error) {
+	var product domain.Product
 	query := `
 	SELECT
 		id,
@@ -68,8 +63,8 @@ func (r *productRepo) Get(productID int) (*Product, error) {
 	return &product, nil
 }
 
-func (r *productRepo) List() ([]*Product, error){
-	var productList []*Product
+func (r *productRepo) List() ([]*domain.Product, error){
+	var productList []*domain.Product
 	query := `
 	SELECT
 		id,
@@ -87,7 +82,7 @@ func (r *productRepo) List() ([]*Product, error){
 	return productList, nil
 }
 
-func (r *productRepo) Update(product Product) (*Product, error) {
+func (r *productRepo) Update(product domain.Product) (*domain.Product, error) {
 	query := `
 	UPDATE products SET
 		title=$1,
@@ -123,31 +118,3 @@ func (r *productRepo) Delete(ProductID int) error {
 	
 }
 
-// func generateInitialProducts(r *productRepo) {
-// 	prd1 := &Product{
-// 		ID: 1,
-// 		Title: "Orange",
-// 		Description: "testy food and healthy food",
-// 		Price: 100,
-// 		ImgUrl: "https://www.dole.com/sites/default/files/media/2025-01/oranges.png",
-// 	}
-
-// 	prd2 := &Product{
-// 		ID: 2,
-// 		Title: "Apple",
-// 		Description: "testy food and healthy food",
-// 		Price: 99,
-// 		ImgUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYnc4owRRH-m0i5-4t-xyiRMvzvhu-QAVF_g&s",
-// 	}
-// 	prd3 := &Product{
-// 		ID: 3,
-// 		Title: "Banana",
-// 		Description: "testy food and healthy food",
-// 		Price: 15,
-// 		ImgUrl: "https://www.dole.com/sites/default/files/styles/1024w768h-80/public/media/2025-01/banana-cavendish_0.png?itok=xIgYOIE_-9FKLRtCr",
-// 	}
-
-// 	r.productList = append(r.productList, prd1)
-// 	r.productList = append(r.productList, prd2)
-// 	r.productList = append(r.productList, prd3)
-// }
